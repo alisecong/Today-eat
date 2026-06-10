@@ -1,9 +1,9 @@
-const CACHE_NAME='today-eat-pwa-v5.7';
+const CACHE_NAME='today-eat-pwa-v5.8';
 const FILES=[
   './',
   './index.html',
-  './style-v5.css?v=5.7',
-  './app-v5.js?v=5.7',
+  './style-v5.css?v=5.8',
+  './app-v5.js?v=5.8',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'

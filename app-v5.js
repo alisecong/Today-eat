@@ -21,10 +21,9 @@ let state={
   shoppingSearch:'',
   shoppingSelected:new Set(),
   weekly:[],
-  picker:{dayKey:'',mealType:'',keyword:''},
+  picker:{dayKey:'',mealType:'',keyword:'',selected:new Set()},
   selectedGoals:new Set(['减脂']),
-  imageData:'',
-  quickImageDishId:''
+  imageData:''
 };
 
 const $=id=>document.getElementById(id);
@@ -62,8 +61,21 @@ function loadDishes(){
   }
 }
 
+function normalizeMealValue(value){
+  if(Array.isArray(value)) return value.filter(Boolean);
+  if(typeof value==='string' && value.trim()){
+    return value.split(/[、,，;]/).map(s=>s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function displayMeal(value){
+  const arr=normalizeMealValue(value);
+  return arr.join('、');
+}
+
 function defaultWeekly(){
-  return weekDays.map(item=>({...item,breakfast:'',lunch:'',dinner:''}));
+  return weekDays.map(item=>({...item,breakfast:[],lunch:[],dinner:[]}));
 }
 
 function saveWeekly(){
@@ -79,7 +91,15 @@ function loadWeekly(){
   }
   try{
     const data=JSON.parse(raw);
-    state.weekly=weekDays.map(day=>({...day,...(data.find(item=>item.key===day.key)||{})}));
+    state.weekly=weekDays.map(day=>{
+      const old=data.find(item=>item.key===day.key)||{};
+      return {
+        ...day,
+        breakfast: normalizeMealValue(old.breakfast),
+        lunch: normalizeMealValue(old.lunch),
+        dinner: normalizeMealValue(old.dinner)
+      };
+    });
   }catch(e){
     state.weekly=defaultWeekly();
     saveWeekly();
@@ -137,6 +157,11 @@ function getFilteredDishes(){
   return dishes;
 }
 
+function getDishIdFromElement(el){
+  const card=el && el.closest ? el.closest('.dish-card') : null;
+  return card ? card.dataset.id : (el && el.dataset ? el.dataset.id : '');
+}
+
 function dishCard(dish,options={}){
   const tags=[
     `<span class="tag accent">${escapeHtml(dish.category||'家常菜')}</span>`,
@@ -147,8 +172,8 @@ function dishCard(dish,options={}){
   ].join('');
 
   const imageHtml=dish.image
-    ? `<img class="dish-cover quick-image" data-id="${dish.id}" src="${dish.image}" alt="${escapeHtml(dish.name)}">`
-    : `<div class="image-placeholder quick-image" data-id="${dish.id}">点这里添加图片</div>`;
+    ? `<img class="dish-cover quick-image" src="${dish.image}" alt="${escapeHtml(dish.name)}">`
+    : `<div class="image-placeholder quick-image">点这里添加图片</div>`;
 
   return `
     <div class="dish-card" data-id="${dish.id}">
@@ -156,11 +181,11 @@ function dishCard(dish,options={}){
       <div class="dish-head">
         <div class="dish-name">${escapeHtml(dish.name)}</div>
         <div class="ios-menu-wrap">
-          <button class="ios-more-btn" data-id="${dish.id}" aria-label="更多操作">···</button>
+          <button class="ios-more-btn" aria-label="更多操作">···</button>
           <div class="ios-pop-menu">
-            <button class="ios-menu-item edit-dish" data-id="${dish.id}">编辑</button>
-            <button class="ios-menu-item image-dish" data-id="${dish.id}">图片</button>
-            <button class="ios-menu-item delete-dish" data-id="${dish.id}">删除</button>
+            <button class="ios-menu-item edit-dish">编辑</button>
+            <button class="ios-menu-item image-dish">图片</button>
+            <button class="ios-menu-item delete-dish">删除</button>
           </div>
         </div>
       </div>
@@ -205,13 +230,17 @@ function renderShopping(){
 }
 
 function mealBox(day,type,label){
-  const value=day[type];
+  const value=displayMeal(day[type]);
   return `<div class="meal-box"><div class="meal-label">${label}</div><div class="meal-value ${value?'':'meal-empty'}">${escapeHtml(value||'点击选择'+label)}</div><div class="meal-actions"><button class="mini-btn pick-meal" data-day="${day.key}" data-meal="${type}">选择</button>${value?`<button class="mini-btn clear-meal" data-day="${day.key}" data-meal="${type}">清除</button>`:''}</div></div>`;
 }
 
 function renderWeekly(){
   let b=0,l=0,d=0;
-  state.weekly.forEach(item=>{if(item.breakfast)b++;if(item.lunch)l++;if(item.dinner)d++});
+  state.weekly.forEach(item=>{
+    if(normalizeMealValue(item.breakfast).length) b++;
+    if(normalizeMealValue(item.lunch).length) l++;
+    if(normalizeMealValue(item.dinner).length) d++;
+  });
   $('weeklySummary').innerHTML=`<div class="summary-item">早餐 ${b} 次</div><div class="summary-item">午餐 ${l} 次</div><div class="summary-item">晚餐 ${d} 次</div>`;
   $('weeklyList').innerHTML=state.weekly.map((day,index)=>`<div class="week-card"><div class="week-head"><div class="week-day">${day.day}</div><div class="week-date">第 ${index+1} 天</div></div><div class="meal-row">${mealBox(day,'breakfast','早餐')}${mealBox(day,'lunch','午餐')}${mealBox(day,'dinner','晚餐')}</div></div>`).join('');
 }
@@ -257,7 +286,72 @@ function closeDishModal(){
   $('dishModal').classList.add('hidden');
 }
 
-function saveDishFromModal(){
+function compressImageFile(file,targetKB=100,maxW=960,maxH=720){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('图片读取失败'));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('图片加载失败'));
+      img.onload=()=>{
+        let w=img.width;
+        let h=img.height;
+        const ratio=Math.min(1,maxW/w,maxH/h);
+        w=Math.max(1,Math.round(w*ratio));
+        h=Math.max(1,Math.round(h*ratio));
+
+        const canvas=document.createElement('canvas');
+        canvas.width=w;
+        canvas.height=h;
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#FFFFFF';
+        ctx.fillRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+
+        let quality=0.82;
+        let dataUrl=canvas.toDataURL('image/jpeg',quality);
+        const targetBytes=targetKB*1024;
+
+        while(dataUrl.length*0.75>targetBytes && quality>0.38){
+          quality-=0.08;
+          dataUrl=canvas.toDataURL('image/jpeg',quality);
+        }
+
+        if(dataUrl.length*0.75>targetBytes){
+          const scale=Math.sqrt(targetBytes/(dataUrl.length*0.75))*0.95;
+          const canvas2=document.createElement('canvas');
+          canvas2.width=Math.max(1,Math.round(w*scale));
+          canvas2.height=Math.max(1,Math.round(h*scale));
+          const ctx2=canvas2.getContext('2d');
+          ctx2.fillStyle='#FFFFFF';
+          ctx2.fillRect(0,0,canvas2.width,canvas2.height);
+          ctx2.drawImage(img,0,0,canvas2.width,canvas2.height);
+          dataUrl=canvas2.toDataURL('image/jpeg',0.68);
+        }
+
+        resolve(dataUrl);
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function fileToCompressedDataUrl(file){
+  if(!file) return '';
+  try{
+    return await compressImageFile(file,100,960,720);
+  }catch(e){
+    return new Promise(resolve=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=()=>resolve('');
+      reader.readAsDataURL(file);
+    });
+  }
+}
+
+async function saveDishFromModal(){
   const name=$('dishNameInput').value.trim();
   if(!name){
     toast('请填写菜名');
@@ -301,23 +395,72 @@ function deleteDish(id){
 function openQuickImage(id){
   const dish=state.dishes.find(d=>d.id===id);
   if(!dish) return;
-  state.quickImageDishId=id;
   const input=$('quickImageInput');
   input.value='';
+  input.dataset.dishId=id;
   input.click();
 }
 
-function saveQuickImage(file){
-  if(!file||!state.quickImageDishId) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    state.dishes=state.dishes.map(d=>d.id===state.quickImageDishId?{...d,image:reader.result}:d);
-    saveDishes();
-    state.quickImageDishId='';
-    render();
-    toast('图片已保存');
-  };
-  reader.readAsDataURL(file);
+async function saveQuickImage(file,id){
+  if(!file||!id) return;
+  toast('正在压缩图片...');
+  const dataUrl=await fileToCompressedDataUrl(file);
+  if(!dataUrl){
+    toast('图片处理失败');
+    return;
+  }
+  state.dishes=state.dishes.map(d=>d.id===id?{...d,image:dataUrl}:d);
+  saveDishes();
+  render();
+  toast('图片已保存');
+}
+
+function closeAllDishMenus(){
+  document.querySelectorAll('.ios-pop-menu.show').forEach(el=>el.classList.remove('show'));
+}
+
+function handleDishCardClick(e){
+  const more=e.target.closest('.ios-more-btn');
+  const edit=e.target.closest('.edit-dish');
+  const imgBtn=e.target.closest('.image-dish');
+  const del=e.target.closest('.delete-dish');
+  const quick=e.target.closest('.quick-image');
+
+  if(more){
+    e.stopPropagation();
+    const wrap=more.closest('.ios-menu-wrap');
+    if(!wrap) return;
+    const menu=wrap.querySelector('.ios-pop-menu');
+    if(!menu) return;
+    const willShow=!menu.classList.contains('show');
+    closeAllDishMenus();
+    if(willShow) menu.classList.add('show');
+    return;
+  }
+
+  if(edit){
+    closeAllDishMenus();
+    const id=getDishIdFromElement(edit);
+    const dish=state.dishes.find(d=>d.id===id);
+    if(dish) openDishModal(dish);
+    return;
+  }
+
+  if(imgBtn){
+    closeAllDishMenus();
+    openQuickImage(getDishIdFromElement(imgBtn));
+    return;
+  }
+
+  if(del){
+    closeAllDishMenus();
+    deleteDish(getDishIdFromElement(del));
+    return;
+  }
+
+  if(quick){
+    openQuickImage(getDishIdFromElement(quick));
+  }
 }
 
 function openPicker(dayKey,mealType){
@@ -325,7 +468,9 @@ function openPicker(dayKey,mealType){
     toast('请先添加菜品');
     return;
   }
-  state.picker={dayKey,mealType,keyword:''};
+  const day=state.weekly.find(w=>w.key===dayKey);
+  const selected=new Set(normalizeMealValue(day?day[mealType]:[]));
+  state.picker={dayKey,mealType,keyword:'',selected};
   const titleMap={breakfast:'选择早餐',lunch:'选择午餐',dinner:'选择晚餐'};
   $('pickerTitle').textContent=titleMap[mealType]||'选择菜品';
   $('pickerSearch').value='';
@@ -345,8 +490,28 @@ function getPickerDishes(){
 
 function renderPicker(){
   const dishes=getPickerDishes();
-  $('pickerCount').textContent=`${dishes.length} 项`;
-  $('pickerList').innerHTML=dishes.length?dishes.map(d=>`<div class="picker-item" data-id="${d.id}"><div class="picker-name">${escapeHtml(d.name)}</div><div class="picker-meta">${escapeHtml(d.category||'未分类')}${d.calories?' · 约 '+d.calories+' kcal':''}</div></div>`).join(''):'<div class="empty-tip">没有找到匹配的菜品</div>';
+  const count=state.picker.selected.size;
+  $('pickerCount').textContent=`已选 ${count} 项`;
+  $('pickerList').innerHTML=dishes.length?dishes.map(d=>{
+    const checked=state.picker.selected.has(d.name);
+    return `<label class="picker-item picker-check-item" data-name="${escapeHtml(d.name)}">
+      <input type="checkbox" class="picker-check" data-name="${escapeHtml(d.name)}" ${checked?'checked':''}>
+      <div>
+        <div class="picker-name">${escapeHtml(d.name)}</div>
+        <div class="picker-meta">${escapeHtml(d.category||'未分类')}${d.calories?' · 约 '+d.calories+' kcal':''}</div>
+      </div>
+    </label>`;
+  }).join(''):'<div class="empty-tip">没有找到匹配的菜品</div>';
+}
+
+function applyPickerSelection(){
+  const day=state.weekly.find(w=>w.key===state.picker.dayKey);
+  if(!day) return;
+  day[state.picker.mealType]=[...state.picker.selected];
+  saveWeekly();
+  closePicker();
+  renderWeekly();
+  toast('已保存');
 }
 
 function generatePrompt(){
@@ -392,7 +557,7 @@ ${library}
 function exportData(){
   const data={
     app:'today-eat-pwa',
-    version:'v5',
+    version:'v5.8',
     exportedAt:new Date().toISOString(),
     dishes:state.dishes,
     weekly:state.weekly
@@ -426,10 +591,17 @@ function importData(){
   if(!confirm('恢复后会覆盖当前浏览器里的菜品和周计划，是否继续？')) return;
 
   state.dishes=data.dishes;
-  if(Array.isArray(data.weekly)){
-    state.weekly=weekDays.map(day=>({...day,...(data.weekly.find(item=>item.key===day.key)||{})}));
-  }else if(Array.isArray(data.weeklyPlan)){
-    state.weekly=weekDays.map(day=>({...day,...(data.weeklyPlan.find(item=>item.key===day.key)||{})}));
+  const weeklyData=Array.isArray(data.weekly)?data.weekly:(Array.isArray(data.weeklyPlan)?data.weeklyPlan:[]);
+  if(weeklyData.length){
+    state.weekly=weekDays.map(day=>{
+      const old=weeklyData.find(item=>item.key===day.key)||{};
+      return {
+        ...day,
+        breakfast: normalizeMealValue(old.breakfast),
+        lunch: normalizeMealValue(old.lunch),
+        dinner: normalizeMealValue(old.dinner)
+      };
+    });
   }
 
   saveDishes();
@@ -437,53 +609,6 @@ function importData(){
   $('importText').value='';
   toast('恢复成功');
   render();
-}
-
-function closeAllDishMenus(){
-  document.querySelectorAll('.ios-pop-menu.show').forEach(el=>el.classList.remove('show'));
-}
-
-function handleDishCardClick(e){
-  const more=e.target.closest('.ios-more-btn');
-  const edit=e.target.closest('.edit-dish');
-  const imgBtn=e.target.closest('.image-dish');
-  const del=e.target.closest('.delete-dish');
-  const quick=e.target.closest('.quick-image');
-
-  if(more){
-    e.stopPropagation();
-    const wrap = more.closest('.ios-menu-wrap');
-    if(!wrap) return;
-    const menu = wrap.querySelector('.ios-pop-menu');
-    if(!menu) return;
-    const willShow = !menu.classList.contains('show');
-    closeAllDishMenus();
-    if(willShow) menu.classList.add('show');
-    return;
-  }
-
-  if(edit){
-    closeAllDishMenus();
-    const dish=state.dishes.find(d=>d.id===edit.dataset.id);
-    if(dish) openDishModal(dish);
-    return;
-  }
-
-  if(imgBtn){
-    closeAllDishMenus();
-    openQuickImage(imgBtn.dataset.id);
-    return;
-  }
-
-  if(del){
-    closeAllDishMenus();
-    deleteDish(del.dataset.id);
-    return;
-  }
-
-  if(quick){
-    openQuickImage(quick.dataset.id);
-  }
 }
 
 function bindEvents(){
@@ -509,20 +634,24 @@ function bindEvents(){
   });
   $('saveDishBtn').addEventListener('click',saveDishFromModal);
 
-  $('dishImageInput').addEventListener('change',e=>{
+  $('dishImageInput').addEventListener('change',async e=>{
     const file=e.target.files[0];
     if(!file) return;
-    const reader=new FileReader();
-    reader.onload=()=>{
-      state.imageData=reader.result;
-      $('imagePreview').src=state.imageData;
-      $('imagePreview').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+    toast('正在压缩图片...');
+    const dataUrl=await fileToCompressedDataUrl(file);
+    if(!dataUrl){
+      toast('图片处理失败');
+      return;
+    }
+    state.imageData=dataUrl;
+    $('imagePreview').src=state.imageData;
+    $('imagePreview').classList.remove('hidden');
+    toast('图片已压缩');
   });
 
   $('quickImageInput').addEventListener('change',e=>{
-    saveQuickImage(e.target.files[0]);
+    const id=e.target.dataset.dishId;
+    saveQuickImage(e.target.files[0],id);
   });
 
   $('dishList').addEventListener('click',handleDishCardClick);
@@ -557,7 +686,7 @@ function bindEvents(){
     if(clear){
       const item=state.weekly.find(w=>w.key===clear.dataset.day);
       if(item){
-        item[clear.dataset.meal]='';
+        item[clear.dataset.meal]=[];
         saveWeekly();
         renderWeekly();
       }
@@ -569,25 +698,34 @@ function bindEvents(){
     renderPicker();
   });
 
-  $('pickerList').addEventListener('click',e=>{
-    const item=e.target.closest('.picker-item');
-    if(!item) return;
-    const dish=state.dishes.find(d=>d.id===item.dataset.id);
-    const day=state.weekly.find(w=>w.key===state.picker.dayKey);
-    if(dish&&day){
-      day[state.picker.mealType]=dish.name;
-      saveWeekly();
-      closePicker();
-      renderWeekly();
-    }
+  $('pickerList').addEventListener('change',e=>{
+    const box=e.target.closest('.picker-check');
+    if(!box) return;
+    const name=box.dataset.name;
+    if(box.checked) state.picker.selected.add(name);
+    else state.picker.selected.delete(name);
+    renderPicker();
   });
 
+  $('pickerList').addEventListener('click',e=>{
+    const item=e.target.closest('.picker-check-item');
+    if(!item || e.target.classList.contains('picker-check')) return;
+    const box=item.querySelector('.picker-check');
+    if(!box) return;
+    box.checked=!box.checked;
+    const name=box.dataset.name;
+    if(box.checked) state.picker.selected.add(name);
+    else state.picker.selected.delete(name);
+    renderPicker();
+  });
+
+  $('pickerDoneBtn').addEventListener('click',applyPickerSelection);
   $('closePickerBtn').addEventListener('click',closePicker);
   $('pickerModal').addEventListener('click',e=>{
     if(e.target.id==='pickerModal') closePicker();
   });
 
-  $('copyWeeklyBtn').addEventListener('click',()=>copyText(state.weekly.map(item=>`${item.day}：早餐 ${item.breakfast||'-'}；午餐 ${item.lunch||'-'}；晚餐 ${item.dinner||'-'}`).join('\n')));
+  $('copyWeeklyBtn').addEventListener('click',()=>copyText(state.weekly.map(item=>`${item.day}：早餐 ${displayMeal(item.breakfast)||'-'}；午餐 ${displayMeal(item.lunch)||'-'}；晚餐 ${displayMeal(item.dinner)||'-'}`).join('\n')));
 
   $('clearWeeklyBtn').addEventListener('click',()=>{
     if(confirm('是否清空整周菜单规划？')){

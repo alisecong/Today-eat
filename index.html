@@ -10,7 +10,7 @@
   <title>今天吃啥</title>
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-  <link rel="stylesheet" href="./style-v5.css?v=5.7" />
+  <link rel="stylesheet" href="./style-v5.css?v=5.8" />
 </head>
 <body>
   <div id="app">
@@ -126,13 +126,16 @@
         <div class="modal-head"><div class="sub-title" id="pickerTitle">选择菜品</div><span class="small-pill" id="pickerCount">0 项</span></div>
         <div class="search-wrap"><span class="search-icon">⌕</span><input id="pickerSearch" class="input picker-search" placeholder="搜索菜名 / 分类 / 食材" /></div>
         <div class="picker-list" id="pickerList"></div>
-        <button class="secondary-btn" id="closePickerBtn">取消</button>
+        <div class="picker-actions">
+          <button class="secondary-btn half" id="closePickerBtn">取消</button>
+          <button class="primary-btn half" id="pickerDoneBtn">完成选择</button>
+        </div>
       </div>
     </div>
 
     <input id="quickImageInput" class="hidden" type="file" accept="image/*" />
     <div class="toast hidden" id="toast"></div>
   </div>
-  <script src="./app-v5.js?v=5.7"></script>
+  <script src="./app-v5.js?v=5.8"></script>
 </body>
 </html>

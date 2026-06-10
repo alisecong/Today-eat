@@ -177,3 +177,62 @@ h1{color:var(--orange) !important;font-weight:800 !important;letter-spacing:-.02
   border:1.5px dashed #E2E4EB !important;
   color:#8A8A94 !important;
 }
+
+
+/* V5.8 smaller image box + faster compressed images + weekly multi-select */
+.dish-cover,
+.image-placeholder{
+  width:70% !important;
+  max-width:360px !important;
+  aspect-ratio:4 / 3 !important;
+  height:auto !important;
+  min-height:unset !important;
+  max-height:none !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  margin-bottom:14px !important;
+  border-radius:18px !important;
+}
+.dish-cover{
+  object-fit:contain !important;
+  object-position:center center !important;
+  background:#F7F7FA !important;
+  border:1px solid #ECECF1 !important;
+}
+.image-placeholder{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#FAFAFC !important;
+  border:1.5px dashed #E2E4EB !important;
+  color:#8A8A94 !important;
+}
+
+@media (max-width:480px){
+  .dish-cover,
+  .image-placeholder{
+    width:72% !important;
+    max-width:300px !important;
+  }
+}
+
+.picker-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+.picker-check-item{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+.picker-check{
+  width:18px;
+  height:18px;
+  flex:0 0 auto;
+  accent-color:#FF9500;
+}
+.meal-value{
+  white-space:normal !important;
+  word-break:break-word !important;
+}
