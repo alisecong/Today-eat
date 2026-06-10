@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#F8EFE5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="今天吃啥" />
+  <title>今天吃啥</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <main class="page">
+      <section class="tab-page active" id="page-home">
+        <div class="card center-card">
+          <div class="hero-icon">🍚</div>
+          <h1>今天吃啥</h1>
+          <p class="hero-sub">轻轻一点，别再纠结吃什么。</p>
+        </div>
+        <button class="primary-btn compact" id="randomBtn">换一批推荐</button>
+        <div class="dish-list" id="recommendList"></div>
+      </section>
+
+      <section class="tab-page" id="page-dishes">
+        <div class="card search-card"><input id="dishSearch" class="input" placeholder="搜索菜名 / 食材 / 标签..." /></div>
+        <div class="info-line"><span class="small-pill" id="dishTotal">共 0 道菜</span><span class="small-pill gray" id="dishShowing">当前显示 0 道</span></div>
+        <div class="category-grid" id="categoryGrid"></div>
+        <div class="dish-list" id="dishList"></div>
+        <button class="floating-add" id="addDishBtn">＋ 新增菜品</button>
+      </section>
+
+      <section class="tab-page" id="page-shopping">
+        <div class="card"><div class="sub-title">买菜清单</div><p class="muted">选择要做的菜，自动汇总需要购买的食材。</p></div>
+        <div class="card"><div class="sub-title tiny-title">选择菜品</div><input id="shoppingSearch" class="input" placeholder="搜索菜品..." /><div class="select-list" id="shoppingDishList"></div></div>
+        <div class="card"><div class="between"><div class="sub-title tiny-title">汇总食材</div><button class="mini-btn" id="copyShoppingBtn">复制</button></div><div class="ingredient-result" id="shoppingResult">还没有选择菜品。</div></div>
+      </section>
+
+      <section class="tab-page" id="page-weekly">
+        <div class="card">
+          <div class="sub-title">一周菜单规划</div>
+          <p class="muted">提前安排早餐、午餐和晚餐，更容易坚持，也更方便一次性买菜。</p>
+          <div class="summary-box" id="weeklySummary"></div>
+          <div class="row"><button class="mini-btn" id="copyWeeklyBtn">⎘ 复制周计划</button><button class="mini-btn light" id="clearWeeklyBtn">⌫ 清空</button></div>
+        </div>
+        <div id="weeklyList"></div>
+      </section>
+
+      <section class="tab-page" id="page-ai">
+        <div class="card center-card">
+          <div class="hero-icon">🧠</div>
+          <h1>DeepSeek 饮食助手</h1>
+          <p class="hero-sub">不接 API，不花钱。生成高质量提问，一键复制到 DeepSeek。</p>
+        </div>
+
+        <div class="card">
+          <div class="sub-title">1. 选择你的目标</div>
+          <div class="goal-grid" id="goalGrid"></div>
+          <label class="field-label">身体情况 / 饮食需求</label>
+          <textarea id="healthInput" class="textarea" placeholder="例如：最近减脂，晚上想吃清淡一点，不要太油。"></textarea>
+          <label class="field-label">冰箱已有食材</label>
+          <input id="availableIngredients" class="input" placeholder="例如：鸡蛋、鸡胸肉、生菜、番茄" />
+          <label class="field-label">这次想吃哪一餐</label>
+          <input id="mealScene" class="input" value="晚餐" />
+          <label class="field-label">用餐人数</label>
+          <input id="peopleCount" class="input" value="1人" />
+          <button class="primary-btn" id="generatePromptBtn">生成 DeepSeek 提问内容</button>
+        </div>
+
+        <div class="card hidden" id="promptCard">
+          <div class="sub-title">已生成的提问内容</div>
+          <pre class="prompt-box" id="promptText"></pre>
+          <div class="row"><button class="primary-btn half" id="copyPromptBtn">复制提问</button><button class="secondary-btn half" id="clearPromptBtn">清空</button></div>
+        </div>
+
+        <div class="card">
+          <div class="sub-title">2. 快速灵感</div>
+          <p class="muted">想偷个懒，也可以直接用下面三个快捷方案。</p>
+          <div class="row"><button class="mini-btn" data-quick="slim">💪 减脂晚餐</button><button class="mini-btn" data-quick="simple">🍳 快手家常</button><button class="mini-btn" data-quick="weekly">📅 一周菜单</button></div>
+        </div>
+
+        <div class="card">
+          <div class="sub-title">3. 数据备份 / 恢复</div>
+          <p class="muted">网页 App 的数据存在当前浏览器本地。换手机、换浏览器、清缓存前，先导出备份。</p>
+          <button class="secondary-btn" id="exportDataBtn">生成备份数据</button>
+          <pre class="backup-box hidden" id="backupText"></pre>
+          <div class="row hidden" id="backupActions"><button class="primary-btn half" id="copyBackupBtn">复制备份</button><button class="secondary-btn half" id="clearBackupBtn">清空</button></div>
+          <label class="field-label">恢复数据</label>
+          <textarea id="importText" class="textarea backup-textarea" placeholder="把之前复制的备份内容粘贴到这里，然后点击恢复。"></textarea>
+          <button class="danger-btn" id="importDataBtn">恢复备份数据</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-tab">
+      <button class="tab-btn active" data-page="home">推荐</button>
+      <button class="tab-btn" data-page="dishes">菜品库</button>
+      <button class="tab-btn" data-page="shopping">买菜</button>
+      <button class="tab-btn" data-page="weekly">周计划</button>
+      <button class="tab-btn" data-page="ai">DeepSeek</button>
+    </nav>
+
+    <div class="modal-mask hidden" id="dishModal">
+      <div class="modal-panel">
+        <div class="modal-handle"></div>
+        <div class="modal-head"><div class="sub-title" id="dishModalTitle">新增菜品</div><button class="icon-btn" id="closeDishModal">×</button></div>
+        <input type="hidden" id="editDishId" />
+        <label class="field-label">菜名</label><input id="dishNameInput" class="input" placeholder="例如：番茄炒蛋" />
+        <label class="field-label">分类</label><select id="dishCategoryInput" class="input"><option>家常菜</option><option>减脂餐</option><option>素菜</option><option>荤菜</option><option>主食</option><option>汤类</option><option>快手菜</option></select>
+        <div class="two-col"><div><label class="field-label">口味</label><input id="dishTasteInput" class="input" placeholder="清淡 / 下饭" /></div><div><label class="field-label">做法</label><input id="dishMethodInput" class="input" placeholder="炒 / 蒸 / 煎" /></div></div>
+        <div class="two-col"><div><label class="field-label">难度</label><input id="dishDifficultyInput" class="input" placeholder="简单 / 中等" /></div><div><label class="field-label">热量 kcal</label><input id="dishCaloriesInput" class="input" type="number" placeholder="约 300" /></div></div>
+        <label class="field-label">食材</label><input id="dishIngredientsInput" class="input" placeholder="番茄、鸡蛋、葱" />
+        <label class="field-label">标签</label><input id="dishTagsInput" class="input" placeholder="快手、减脂、下饭" />
+        <label class="field-label">图片</label><input id="dishImageInput" class="file-input" type="file" accept="image/*" /><img id="imagePreview" class="image-preview hidden" alt="预览" />
+        <label class="field-label">备注</label><textarea id="dishNoteInput" class="textarea" placeholder="例如：少油版更适合晚餐。"></textarea>
+        <button class="primary-btn" id="saveDishBtn">保存菜品</button>
+      </div>
+    </div>
+
+    <div class="modal-mask hidden" id="pickerModal">
+      <div class="picker-panel">
+        <div class="modal-handle"></div>
+        <div class="modal-head"><div class="sub-title" id="pickerTitle">选择菜品</div><span class="small-pill" id="pickerCount">0 项</span></div>
+        <div class="search-wrap"><span class="search-icon">⌕</span><input id="pickerSearch" class="input picker-search" placeholder="搜索菜名 / 分类 / 食材" /></div>
+        <div class="picker-list" id="pickerList"></div>
+        <button class="secondary-btn" id="closePickerBtn">取消</button>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
