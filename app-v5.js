@@ -560,7 +560,7 @@ ${library}
 function exportData(){
   const data={
     app:'today-eat-pwa',
-    version:'v5.10',
+    version:'v5.11',
     exportedAt:new Date().toISOString(),
     dishes:state.dishes,
     weekly:state.weekly

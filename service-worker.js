@@ -1,14 +1,13 @@
-const CACHE_NAME='today-eat-pwa-v5.10';
+const CACHE_NAME='today-eat-pwa-v5.11';
 const APP_SHELL=[
   '/Today-eat/',
   '/Today-eat/index.html',
-  '/Today-eat/style-v5.css?v=5.10',
-  '/Today-eat/app-v5.js?v=5.10',
-  '/Today-eat/manifest.webmanifest?v=5.10',
+  '/Today-eat/style-v5.css?v=5.11',
+  '/Today-eat/app-v5.js?v=5.11',
+  '/Today-eat/manifest.webmanifest?v=5.11',
   '/Today-eat/manifest.json',
   '/Today-eat/icons/icon-192.png',
-  '/Today-eat/icons/icon-512.png',
-  '/Today-eat/icons/maskable-512.png'
+  '/Today-eat/icons/icon-512.png'
 ];
 
 self.addEventListener('install',event=>{
