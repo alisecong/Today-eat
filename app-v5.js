@@ -155,12 +155,12 @@ function dishCard(dish,options={}){
       ${imageHtml}
       <div class="dish-head">
         <div class="dish-name">${escapeHtml(dish.name)}</div>
-        <div class="dish-head-actions">
-          <button class="dish-more-btn" data-id="${dish.id}" aria-label="更多操作">···</button>
-          <div class="dish-action-menu">
-            <button class="mini-btn edit-dish" data-id="${dish.id}">编辑</button>
-            <button class="mini-btn image-dish" data-id="${dish.id}">图片</button>
-            <button class="mini-btn delete-dish" data-id="${dish.id}">删除</button>
+        <div class="ios-menu-wrap">
+          <button class="ios-more-btn" data-id="${dish.id}" aria-label="更多操作">···</button>
+          <div class="ios-pop-menu">
+            <button class="ios-menu-item edit-dish" data-id="${dish.id}">编辑</button>
+            <button class="ios-menu-item image-dish" data-id="${dish.id}">图片</button>
+            <button class="ios-menu-item delete-dish" data-id="${dish.id}">删除</button>
           </div>
         </div>
       </div>
@@ -440,11 +440,11 @@ function importData(){
 }
 
 function closeAllDishMenus(){
-  document.querySelectorAll('.dish-action-menu.show').forEach(el=>el.classList.remove('show'));
+  document.querySelectorAll('.ios-pop-menu.show').forEach(el=>el.classList.remove('show'));
 }
 
 function handleDishCardClick(e){
-  const more=e.target.closest('.dish-more-btn');
+  const more=e.target.closest('.ios-more-btn');
   const edit=e.target.closest('.edit-dish');
   const imgBtn=e.target.closest('.image-dish');
   const del=e.target.closest('.delete-dish');
@@ -452,9 +452,9 @@ function handleDishCardClick(e){
 
   if(more){
     e.stopPropagation();
-    const card = more.closest('.dish-card');
-    if(!card) return;
-    const menu = card.querySelector('.dish-action-menu');
+    const wrap = more.closest('.ios-menu-wrap');
+    if(!wrap) return;
+    const menu = wrap.querySelector('.ios-pop-menu');
     if(!menu) return;
     const willShow = !menu.classList.contains('show');
     closeAllDishMenus();
@@ -529,7 +529,7 @@ function bindEvents(){
   $('recommendList').addEventListener('click',handleDishCardClick);
 
   document.addEventListener('click',e=>{
-    if(!e.target.closest('.dish-head-actions')){
+    if(!e.target.closest('.ios-menu-wrap')){
       closeAllDishMenus();
     }
   });
