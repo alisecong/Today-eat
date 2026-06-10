@@ -24,8 +24,7 @@ let state={
   picker:{dayKey:'',mealType:'',keyword:''},
   selectedGoals:new Set(['减脂']),
   imageData:'',
-  quickImageDishId:'',
-  actionMenuDishId:''
+  quickImageDishId:''
 };
 
 const $=id=>document.getElementById(id);
@@ -156,20 +155,20 @@ function dishCard(dish,options={}){
       ${imageHtml}
       <div class="dish-head">
         <div class="dish-name">${escapeHtml(dish.name)}</div>
+        <div class="dish-head-actions">
+          <button class="dish-more-btn" data-id="${dish.id}" aria-label="更多操作">···</button>
+          <div class="dish-action-menu">
+            <button class="mini-btn edit-dish" data-id="${dish.id}">编辑</button>
+            <button class="mini-btn image-dish" data-id="${dish.id}">图片</button>
+            <button class="mini-btn delete-dish" data-id="${dish.id}">删除</button>
+          </div>
+        </div>
       </div>
       <div class="tag-wrap">${tags}</div>
       <div class="ingredients">食材：${escapeHtml((dish.ingredients||[]).join('、')||'未填写')}</div>
       <div class="calorie-text">热量：约 ${escapeHtml(dish.calories||'未填写')} kcal</div>
       ${dish.note?`<div class="ingredients">备注：${escapeHtml(dish.note)}</div>`:''}
       ${(dish.tags||[]).join('').includes('减脂')||(dish.calories&&Number(dish.calories)<=350)?'<span class="slim-badge">减脂友好</span>':''}
-      <div class="dish-actions-wrap">
-        <div class="dish-action-menu ${state.actionMenuDishId===dish.id?'show':''}">
-          <button class="mini-btn edit-dish" data-id="${dish.id}">编辑</button>
-          <button class="mini-btn image-dish" data-id="${dish.id}">图片</button>
-          <button class="mini-btn delete-dish" data-id="${dish.id}">删除</button>
-        </div>
-        <button class="dish-more-btn" data-id="${dish.id}">···</button>
-      </div>
     </div>
   `;
 }
@@ -440,6 +439,10 @@ function importData(){
   render();
 }
 
+function closeAllDishMenus(){
+  document.querySelectorAll('.dish-action-menu.show').forEach(el=>el.classList.remove('show'));
+}
+
 function handleDishCardClick(e){
   const more=e.target.closest('.dish-more-btn');
   const edit=e.target.closest('.edit-dish');
@@ -449,26 +452,31 @@ function handleDishCardClick(e){
 
   if(more){
     e.stopPropagation();
-    state.actionMenuDishId = state.actionMenuDishId===more.dataset.id ? '' : more.dataset.id;
-    render();
+    const card = more.closest('.dish-card');
+    if(!card) return;
+    const menu = card.querySelector('.dish-action-menu');
+    if(!menu) return;
+    const willShow = !menu.classList.contains('show');
+    closeAllDishMenus();
+    if(willShow) menu.classList.add('show');
     return;
   }
 
   if(edit){
-    state.actionMenuDishId='';
+    closeAllDishMenus();
     const dish=state.dishes.find(d=>d.id===edit.dataset.id);
     if(dish) openDishModal(dish);
     return;
   }
 
   if(imgBtn){
-    state.actionMenuDishId='';
+    closeAllDishMenus();
     openQuickImage(imgBtn.dataset.id);
     return;
   }
 
   if(del){
-    state.actionMenuDishId='';
+    closeAllDishMenus();
     deleteDish(del.dataset.id);
     return;
   }
@@ -521,9 +529,8 @@ function bindEvents(){
   $('recommendList').addEventListener('click',handleDishCardClick);
 
   document.addEventListener('click',e=>{
-    if(!e.target.closest('.dish-actions-wrap') && state.actionMenuDishId){
-      state.actionMenuDishId='';
-      render();
+    if(!e.target.closest('.dish-head-actions')){
+      closeAllDishMenus();
     }
   });
 
