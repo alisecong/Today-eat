@@ -150,3 +150,30 @@ h1{color:var(--orange) !important;font-weight:800 !important;letter-spacing:-.02
 .ios-menu-item{display:block;width:100%;height:34px;padding:0 14px;background:transparent;border:none;color:#4D4D56;font-size:12px;font-weight:650;line-height:34px;text-align:center;white-space:nowrap}
 .ios-menu-item + .ios-menu-item{border-top:1px solid #F2F3F7}
 .ios-menu-item.delete-dish{color:#C35B5B}
+
+
+/* V5.7 4:3 image ratio for horizontal food photos */
+.dish-cover,
+.image-placeholder{
+  width:100% !important;
+  aspect-ratio:4 / 3 !important;
+  height:auto !important;
+  min-height:unset !important;
+  max-height:none !important;
+  border-radius:18px !important;
+}
+.dish-cover{
+  object-fit:contain !important;
+  object-position:center center !important;
+  background:#F7F7FA !important;
+  border:1px solid #ECECF1 !important;
+  padding:0 !important;
+}
+.image-placeholder{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#FAFAFC !important;
+  border:1.5px dashed #E2E4EB !important;
+  color:#8A8A94 !important;
+}
