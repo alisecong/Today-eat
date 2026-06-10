@@ -1,5 +1,6 @@
 const STORAGE_KEY='today_eat_pwa_dishes_v1';
 const WEEKLY_KEY='today_eat_pwa_weekly_v1';
+const UI_KEY='today_eat_pwa_ui_v1';
 
 const categories=['全部','家常菜','减脂餐','素菜','荤菜','主食','汤类','快手菜'];
 const goals=['减脂','清淡','高蛋白','快手','下饭','少油少盐'];
@@ -109,6 +110,30 @@ function loadWeekly(){
   }
 }
 
+
+function saveUI(){
+  localStorage.setItem(UI_KEY,JSON.stringify({
+    currentPage:state.currentPage
+  }));
+}
+
+function loadUI(){
+  try{
+    const raw=localStorage.getItem(UI_KEY);
+    if(!raw) return;
+    const data=JSON.parse(raw)||{};
+    const valid=['home','dishes','shopping','weekly','ai'];
+    if(valid.includes(data.currentPage)) state.currentPage=data.currentPage;
+  }catch(e){}
+}
+
+function applyCurrentPageUI(){
+  document.querySelectorAll('.tab-page').forEach(el=>el.classList.remove('active'));
+  const pageEl=$("page-"+state.currentPage);
+  if(pageEl) pageEl.classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===state.currentPage));
+}
+
 function toast(msg){
   const el=$('toast');
   el.textContent=msg;
@@ -133,9 +158,8 @@ async function copyText(text){
 
 function switchPage(page){
   state.currentPage=page;
-  document.querySelectorAll('.tab-page').forEach(el=>el.classList.remove('active'));
-  $('page-'+page).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===page));
+  saveUI();
+  applyCurrentPageUI();
   render();
 }
 
@@ -862,7 +886,9 @@ function initPWA(){
 function init(){
   loadDishes();
   loadWeekly();
+  loadUI();
   bindEvents();
+  applyCurrentPageUI();
   initPWA();
   initInstallPrompt();
   render();

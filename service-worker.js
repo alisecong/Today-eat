@@ -1,10 +1,10 @@
-const CACHE_NAME='today-eat-pwa-v5.12';
+const CACHE_NAME='today-eat-pwa-v5.13';
 const APP_SHELL=[
   './',
   './index.html',
-  './style-v5.css?v=5.12',
-  './app-v5.js?v=5.12',
-  './manifest.webmanifest?v=5.12',
+  './style-v5.css?v=5.13',
+  './app-v5.js?v=5.13',
+  './manifest.webmanifest?v=5.13',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
