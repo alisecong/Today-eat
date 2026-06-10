@@ -236,3 +236,28 @@ h1{color:var(--orange) !important;font-weight:800 !important;letter-spacing:-.02
   white-space:normal !important;
   word-break:break-word !important;
 }
+
+
+/* V5.9 PWA install enhancement */
+.install-card{
+  border-style:solid !important;
+}
+.install-text{
+  margin-top:4px !important;
+  font-size:12px !important;
+}
+.install-btn{
+  min-width:86px !important;
+  height:32px !important;
+  min-height:32px !important;
+  color:#FFFFFF !important;
+  background:linear-gradient(135deg,#FFB340 0%,#FF9500 100%) !important;
+  border:none !important;
+  box-shadow:0 8px 16px rgba(255,149,0,.16) !important;
+}
+.install-btn.disabled{
+  opacity:.65 !important;
+  background:#E6E6EA !important;
+  color:#8A8A94 !important;
+  box-shadow:none !important;
+}

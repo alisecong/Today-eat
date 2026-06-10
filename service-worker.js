@@ -1,9 +1,9 @@
-const CACHE_NAME='today-eat-pwa-v5.8';
+const CACHE_NAME='today-eat-pwa-v5.9';
 const FILES=[
   './',
   './index.html',
-  './style-v5.css?v=5.8',
-  './app-v5.js?v=5.8',
+  './style-v5.css?v=5.9',
+  './app-v5.js?v=5.9',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -27,6 +27,10 @@ self.addEventListener('fetch',event=>{
       const copy=response.clone();
       caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy)).catch(()=>{});
       return response;
-    }).catch(()=>caches.match(event.request))
+    }).catch(()=>caches.match(event.request).then(cached=>{
+      if(cached) return cached;
+      if(event.request.mode==='navigate') return caches.match('./index.html');
+      return cached;
+    }))
   );
 });

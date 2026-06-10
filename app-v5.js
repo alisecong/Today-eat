@@ -13,6 +13,9 @@ const weekDays=[
   {key:'sun',day:'周日'}
 ];
 
+let deferredInstallPrompt=null;
+let installReady=false;
+
 let state={
   currentPage:'home',
   dishes:[],
@@ -557,7 +560,7 @@ ${library}
 function exportData(){
   const data={
     app:'today-eat-pwa',
-    version:'v5.8',
+    version:'v5.9',
     exportedAt:new Date().toISOString(),
     dishes:state.dishes,
     weekly:state.weekly
@@ -609,6 +612,68 @@ function importData(){
   $('importText').value='';
   toast('恢复成功');
   render();
+}
+
+
+function updateInstallUI(){
+  const btn=$('installAppBtn');
+  const hint=$('installHint');
+  if(!btn||!hint) return;
+
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if(isStandalone){
+    hint.textContent='已经是 App 模式打开，不需要重复安装。';
+    btn.textContent='已安装';
+    btn.disabled=true;
+    btn.classList.add('disabled');
+    return;
+  }
+
+  if(installReady&&deferredInstallPrompt){
+    hint.textContent='浏览器已识别为可安装 App，点击按钮即可安装。';
+    btn.textContent='安装应用';
+    btn.disabled=false;
+    btn.classList.remove('disabled');
+  }else{
+    hint.textContent='如果按钮暂时不能安装，请先刷新 1-2 次，或等 GitHub Pages 更新完成后再打开。';
+    btn.textContent='尝试安装';
+    btn.disabled=false;
+    btn.classList.remove('disabled');
+  }
+}
+
+async function triggerInstallApp(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice=await deferredInstallPrompt.userChoice.catch(()=>null);
+    deferredInstallPrompt=null;
+    installReady=false;
+    updateInstallUI();
+    if(choice&&choice.outcome==='accepted') toast('已开始安装');
+    else toast('已取消安装');
+    return;
+  }
+
+  toast('浏览器还没开放安装入口，请刷新后再试');
+  updateInstallUI();
+}
+
+function initInstallPrompt(){
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();
+    deferredInstallPrompt=e;
+    installReady=true;
+    updateInstallUI();
+  });
+
+  window.addEventListener('appinstalled',()=>{
+    deferredInstallPrompt=null;
+    installReady=false;
+    toast('安装成功');
+    updateInstallUI();
+  });
+
+  setTimeout(updateInstallUI,700);
 }
 
 function bindEvents(){
@@ -769,6 +834,8 @@ function bindEvents(){
     generatePrompt();
   }));
 
+  if($('installAppBtn')) $('installAppBtn').addEventListener('click',triggerInstallApp);
+
   $('generatePromptBtn').addEventListener('click',generatePrompt);
   $('copyPromptBtn').addEventListener('click',()=>copyText($('promptText').textContent));
   $('clearPromptBtn').addEventListener('click',()=>{
@@ -797,6 +864,7 @@ function init(){
   loadWeekly();
   bindEvents();
   initPWA();
+  initInstallPrompt();
   render();
 }
 

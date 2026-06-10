@@ -10,7 +10,7 @@
   <title>今天吃啥</title>
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-  <link rel="stylesheet" href="./style-v5.css?v=5.8" />
+  <link rel="stylesheet" href="./style-v5.css?v=5.9" />
 </head>
 <body>
   <div id="app">
@@ -68,6 +68,17 @@
           <label class="field-label">用餐人数</label>
           <input id="peopleCount" class="input" value="1人" />
           <button class="primary-btn" id="generatePromptBtn">生成 DeepSeek 提问内容</button>
+        </div>
+
+        
+        <div class="card install-card" id="installCard">
+          <div class="between">
+            <div>
+              <div class="sub-title tiny-title">安装到桌面 App</div>
+              <p class="muted install-text" id="installHint">如果浏览器已识别为 App，这里会出现安装按钮。</p>
+            </div>
+            <button class="mini-btn install-btn" id="installAppBtn">安装应用</button>
+          </div>
         </div>
 
         <div class="card hidden" id="promptCard">
@@ -136,6 +147,6 @@
     <input id="quickImageInput" class="hidden" type="file" accept="image/*" />
     <div class="toast hidden" id="toast"></div>
   </div>
-  <script src="./app-v5.js?v=5.8"></script>
+  <script src="./app-v5.js?v=5.9"></script>
 </body>
 </html>
