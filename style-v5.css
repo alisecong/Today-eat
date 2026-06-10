@@ -94,3 +94,15 @@ button,input,textarea,select{font:inherit}button{border:none}.page{padding:calc(
 .dish-action-menu .mini-btn{display:flex !important;align-items:center !important;justify-content:center !important;min-height:26px !important;height:26px !important;padding:0 10px !important;font-size:10.5px !important;line-height:1 !important;border-radius:999px !important;white-space:nowrap !important;color:#6D645B !important;background:#FFFDFC !important;border:1px solid #E9DED2 !important;width:100% !important}
 .dish-action-menu .mini-btn.delete-dish{color:#9A6B63 !important}
 .dish-action-menu::before,.dish-action-menu::after{display:none !important;content:none !important}
+
+
+/* V5.5 plain vertical menu */
+.dish-head-actions{position:relative;display:flex;align-items:flex-start;justify-content:flex-end;flex:0 0 auto;padding-top:1px;z-index:40}
+.dish-more-btn{border:none !important;background:transparent !important;color:#5A544D !important;font-size:20px !important;font-weight:700 !important;line-height:1 !important;padding:0 2px !important;width:auto !important;height:auto !important;min-width:auto !important;min-height:auto !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;letter-spacing:0 !important;box-shadow:none !important;border-radius:0 !important}
+.dish-more-btn:active{transform:scale(.96);background:transparent !important}
+.dish-action-menu{position:absolute !important;top:22px !important;right:-2px !important;display:none;flex-direction:column !important;gap:0 !important;align-items:stretch !important;min-width:76px !important;background:#FFFFFF !important;border:1px solid #EDE3D8 !important;border-radius:12px !important;padding:4px 0 !important;box-shadow:0 12px 24px rgba(84,67,50,.10) !important;z-index:50 !important;overflow:hidden !important;backdrop-filter:none !important}
+.dish-action-menu.show{display:flex !important}
+.dish-action-menu .mini-btn{display:flex !important;align-items:center !important;justify-content:center !important;min-height:32px !important;height:32px !important;padding:0 12px !important;font-size:11px !important;font-weight:600 !important;line-height:1 !important;border:none !important;border-radius:0 !important;white-space:nowrap !important;color:#6D645B !important;background:transparent !important;width:100% !important;box-shadow:none !important}
+.dish-action-menu .mini-btn + .mini-btn{border-top:1px solid #F3ECE4 !important}
+.dish-action-menu .mini-btn.delete-dish{color:#9A6B63 !important}
+.dish-action-menu::before,.dish-action-menu::after,.dish-action-menu .mini-btn::before,.dish-action-menu .mini-btn::after{display:none !important;content:none !important}
