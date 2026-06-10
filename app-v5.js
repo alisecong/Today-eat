@@ -560,7 +560,7 @@ ${library}
 function exportData(){
   const data={
     app:'today-eat-pwa',
-    version:'v5.9',
+    version:'v5.10',
     exportedAt:new Date().toISOString(),
     dishes:state.dishes,
     weekly:state.weekly
@@ -635,7 +635,7 @@ function updateInstallUI(){
     btn.disabled=false;
     btn.classList.remove('disabled');
   }else{
-    hint.textContent='如果按钮暂时不能安装，请先刷新 1-2 次，或等 GitHub Pages 更新完成后再打开。';
+    hint.textContent='如果按钮暂时不能安装，说明 Chrome 还没触发 PWA 安装事件，可先清除本站缓存后重进。';
     btn.textContent='尝试安装';
     btn.disabled=false;
     btn.classList.remove('disabled');
