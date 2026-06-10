@@ -2,21 +2,21 @@
   "name": "今天吃啥",
   "short_name": "今天吃啥",
   "description": "自用菜单记录、周计划和买菜清单",
-  "start_url": "/Today-eat/?source=pwa",
-  "scope": "/Today-eat/",
+  "start_url": "./?source=pwa",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F5F5F7",
   "theme_color": "#F5F5F7",
   "icons": [
     {
-      "src": "/Today-eat/icons/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/Today-eat/icons/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
