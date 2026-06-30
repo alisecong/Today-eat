@@ -361,7 +361,10 @@ function openDishModal(dish){
 }
 
 function closeDishModal(){
+  clearTimeout(autoSaveTimer);
+  autoSaveDish();
   $('dishModal').classList.add('hidden');
+  render();
 }
 
 function compressImageFile(file,targetKB=100,maxW=960,maxH=720){
@@ -429,16 +432,14 @@ async function fileToCompressedDataUrl(file){
   }
 }
 
-async function saveDishFromModal(){
-  const name=$('dishNameInput').value.trim();
-  if(!name){
-    toast('请填写菜名');
-    return;
-  }
+let autoSaveTimer=null;
 
-  const id=$('editDishId').value||uid();
-  const old=state.dishes.find(d=>d.id===id);
-  const dish={
+function buildDishFromModal(){
+  const name=$('dishNameInput').value.trim();
+  if(!name) return null;
+  let id=$('editDishId').value;
+  if(!id){id=uid();$('editDishId').value=id;}
+  return {
     id,
     name,
     category:$('dishCategoryInput').value||'家常菜',
@@ -452,12 +453,33 @@ async function saveDishFromModal(){
     note:$('dishNoteInput').value.trim(),
     image:state.imageData||''
   };
+}
 
-  state.dishes=old?state.dishes.map(d=>d.id===id?dish:d):[dish,...state.dishes];
+function commitDish(dish){
+  const exists=state.dishes.some(d=>d.id===dish.id);
+  state.dishes=exists?state.dishes.map(d=>d.id===dish.id?dish:d):[dish,...state.dishes];
   saveDishes();
-  closeDishModal();
+}
+
+// 自动保存（去抖，输入停下来约半秒后存一次，不弹提示）
+function autoSaveDish(){
+  const dish=buildDishFromModal();
+  if(!dish) return;
+  commitDish(dish);
+}
+function scheduleAutoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(autoSaveDish,500);
+}
+
+// 点"保存菜品"按钮：校验菜名 → 存 → 关闭
+function saveDishFromModal(){
+  if(!$('dishNameInput').value.trim()){
+    toast('请填写菜名');
+    return;
+  }
   toast('已保存');
-  render();
+  closeDishModal();
 }
 
 function deleteDish(id){
@@ -774,10 +796,14 @@ function bindEvents(){
     if(e.target.id==='dishModal') closeDishModal();
   });
   $('saveDishBtn').addEventListener('click',saveDishFromModal);
-  $('estimateCalBtn').addEventListener('click',()=>handleEstimateCalories(false));
-  $('dishWeightInput').addEventListener('input',autoEstimateOnWeight);
-  $('dishNameInput').addEventListener('input',autoEstimateOnWeight);
-  $('dishCategoryInput').addEventListener('change',autoEstimateOnWeight);
+  // 影响热量估算的字段：实时估算 + 自动保存
+  $('dishWeightInput').addEventListener('input',()=>{autoEstimateOnWeight();scheduleAutoSave();});
+  $('dishNameInput').addEventListener('input',()=>{autoEstimateOnWeight();scheduleAutoSave();});
+  $('dishCategoryInput').addEventListener('change',()=>{autoEstimateOnWeight();scheduleAutoSave();});
+  // 其余字段：自动保存
+  ['dishTasteInput','dishMethodInput','dishDifficultyInput','dishCaloriesInput','dishIngredientsInput','dishTagsInput','dishNoteInput'].forEach(idStr=>{
+    $(idStr).addEventListener('input',scheduleAutoSave);
+  });
 
   $('dishImageInput').addEventListener('change',async e=>{
     const file=e.target.files[0];
@@ -791,6 +817,7 @@ function bindEvents(){
     state.imageData=dataUrl;
     $('imagePreview').src=state.imageData;
     $('imagePreview').classList.remove('hidden');
+    scheduleAutoSave();
     toast('图片已压缩');
   });
 
