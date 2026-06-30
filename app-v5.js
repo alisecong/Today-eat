@@ -36,6 +36,49 @@ function uid(){
   return 'd_'+Date.now()+'_'+Math.random().toString(16).slice(2);
 }
 
+/* ===== 热量估算参考表（每 100 克熟食的大致热量，仅供粗略参考）===== */
+const CAL_PER_100G_BY_CATEGORY={
+  '家常菜':130,'减脂餐':90,'素菜':70,'荤菜':210,'主食':170,'汤类':45,'快手菜':130
+};
+const CAL_PER_100G_BY_DISH={
+  '番茄炒蛋':110,'西红柿炒蛋':110,'青椒肉丝':160,'清蒸鲈鱼':105,'清蒸鱼':105,
+  '蒜蓉生菜':60,'香煎鸡胸肉':165,'鸡胸肉':130,'红烧肉':470,'宫保鸡丁':200,
+  '麻婆豆腐':150,'鱼香肉丝':170,'清炒时蔬':70,'炒青菜':70,'米饭':116,'白米饭':116,
+  '蛋炒饭':190,'炒饭':190,'西红柿鸡蛋汤':35,'紫菜蛋花汤':30,'白煮蛋':145,'水煮蛋':145,
+  '牛肉面':130,'炒河粉':200,'糖醋里脊':240,'可乐鸡翅':210,'土豆丝':100,'酸辣土豆丝':100
+};
+const DEFAULT_PORTION_G=250;
+
+// 根据菜名 + 分类 + 重量，估算一份菜的大致热量（返回整数 kcal）
+function estimateDishCalories(name,category,weight){
+  const grams=Number(weight)>0?Number(weight):DEFAULT_PORTION_G;
+  const key=(name||'').trim();
+  let per100=null;
+  if(key){
+    if(CAL_PER_100G_BY_DISH[key]!=null) per100=CAL_PER_100G_BY_DISH[key];
+    else{
+      for(const dish in CAL_PER_100G_BY_DISH){
+        if(key.includes(dish)||dish.includes(key)){per100=CAL_PER_100G_BY_DISH[dish];break;}
+      }
+    }
+  }
+  let matchedBy='dish';
+  if(per100==null){per100=CAL_PER_100G_BY_CATEGORY[category]||130;matchedBy='category';}
+  const kcal=Math.round(per100*grams/100/5)*5; // 取整到 5 的倍数，提示是估算值
+  return {kcal,grams,matchedBy};
+}
+
+function handleEstimateCalories(){
+  const name=$('dishNameInput').value.trim();
+  const category=$('dishCategoryInput').value||'家常菜';
+  const weight=$('dishWeightInput').value;
+  const {kcal,grams,matchedBy}=estimateDishCalories(name,category,weight);
+  $('dishCaloriesInput').value=kcal;
+  const basis=matchedBy==='dish'?'按菜名匹配':'按分类「'+category+'」';
+  $('estimateHint').textContent='已估算：约 '+grams+' 克 · '+basis+' ≈ '+kcal+' kcal（可手动修改）。';
+  toast('已估算 ≈ '+kcal+' kcal');
+}
+
 function defaultDishes(){
   return [
     {id:uid(),name:'番茄炒蛋',category:'家常菜',taste:'酸甜',method:'炒',difficulty:'简单',calories:320,tags:['快手','下饭'],ingredients:['番茄','鸡蛋','葱'],image:'',note:'少油版更适合晚餐。'},
@@ -293,6 +336,8 @@ function openDishModal(dish){
   $('dishMethodInput').value=dish?dish.method||'':'';
   $('dishDifficultyInput').value=dish?dish.difficulty||'':'';
   $('dishCaloriesInput').value=dish?dish.calories||'':'';
+  $('dishWeightInput').value='';
+  $('estimateHint').textContent='填入重量后点"估算热量"，会按菜名或分类自动估算并填入上面的热量框，结果可手动修改。重量留空则按一份约 250 克估算。';
   $('dishIngredientsInput').value=dish?(dish.ingredients||[]).join('、'):'';
   $('dishTagsInput').value=dish?(dish.tags||[]).join('、'):'';
   $('dishNoteInput').value=dish?dish.note||'':'';
@@ -722,6 +767,7 @@ function bindEvents(){
     if(e.target.id==='dishModal') closeDishModal();
   });
   $('saveDishBtn').addEventListener('click',saveDishFromModal);
+  $('estimateCalBtn').addEventListener('click',handleEstimateCalories);
 
   $('dishImageInput').addEventListener('change',async e=>{
     const file=e.target.files[0];
