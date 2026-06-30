@@ -68,7 +68,7 @@ function estimateDishCalories(name,category,weight){
   return {kcal,grams,matchedBy};
 }
 
-function handleEstimateCalories(){
+function handleEstimateCalories(silent){
   const name=$('dishNameInput').value.trim();
   const category=$('dishCategoryInput').value||'家常菜';
   const weight=$('dishWeightInput').value;
@@ -76,8 +76,14 @@ function handleEstimateCalories(){
   $('dishCaloriesInput').value=kcal;
   const basis=matchedBy==='dish'?'按菜名匹配':'按分类「'+category+'」';
   $('estimateHint').textContent='已估算：约 '+grams+' 克 · '+basis+' ≈ '+kcal+' kcal（可手动修改）。';
-  toast('已估算 ≈ '+kcal+' kcal');
+  if(!silent) toast('已估算 ≈ '+kcal+' kcal');
 }
+
+// 重量框输入时自动估算（不弹提示，避免每敲一下都跳）
+function autoEstimateOnWeight(){
+  if($('dishWeightInput').value.trim()!=='') handleEstimateCalories(true);
+}
+
 
 function defaultDishes(){
   return [
@@ -336,8 +342,8 @@ function openDishModal(dish){
   $('dishMethodInput').value=dish?dish.method||'':'';
   $('dishDifficultyInput').value=dish?dish.difficulty||'':'';
   $('dishCaloriesInput').value=dish?dish.calories||'':'';
-  $('dishWeightInput').value='';
-  $('estimateHint').textContent='填入重量后点"估算热量"，会按菜名或分类自动估算并填入上面的热量框，结果可手动修改。重量留空则按一份约 250 克估算。';
+  $('dishWeightInput').value=dish?dish.weight||'':'';
+  $('estimateHint').textContent=dish&&dish.weight?('已保存重量约 '+dish.weight+' 克，修改重量会自动重新估算热量（可手动改）。'):'填入重量后会自动估算热量并填入上面的热量框，结果可手动修改。重量留空点"估算热量"则按一份约 250 克估算。';
   $('dishIngredientsInput').value=dish?(dish.ingredients||[]).join('、'):'';
   $('dishTagsInput').value=dish?(dish.tags||[]).join('、'):'';
   $('dishNoteInput').value=dish?dish.note||'':'';
@@ -440,6 +446,7 @@ async function saveDishFromModal(){
     method:$('dishMethodInput').value.trim(),
     difficulty:$('dishDifficultyInput').value.trim(),
     calories:Number($('dishCaloriesInput').value)||'',
+    weight:Number($('dishWeightInput').value)||'',
     ingredients:normalizeList($('dishIngredientsInput').value),
     tags:normalizeList($('dishTagsInput').value),
     note:$('dishNoteInput').value.trim(),
@@ -767,7 +774,10 @@ function bindEvents(){
     if(e.target.id==='dishModal') closeDishModal();
   });
   $('saveDishBtn').addEventListener('click',saveDishFromModal);
-  $('estimateCalBtn').addEventListener('click',handleEstimateCalories);
+  $('estimateCalBtn').addEventListener('click',()=>handleEstimateCalories(false));
+  $('dishWeightInput').addEventListener('input',autoEstimateOnWeight);
+  $('dishNameInput').addEventListener('input',autoEstimateOnWeight);
+  $('dishCategoryInput').addEventListener('change',autoEstimateOnWeight);
 
   $('dishImageInput').addEventListener('change',async e=>{
     const file=e.target.files[0];

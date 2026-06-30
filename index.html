@@ -8,10 +8,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="今天吃啥" />
   <title>今天吃啥</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=5.14" />
+  <link rel="manifest" href="./manifest.webmanifest?v=5.15" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
-  <link rel="stylesheet" href="./style-v5.css?v=5.14" />
+  <link rel="stylesheet" href="./style-v5.css?v=5.15" />
 </head>
 <body>
   <div id="app">
@@ -125,7 +125,7 @@
         <div class="two-col"><div><label class="field-label">口味</label><input id="dishTasteInput" class="input" placeholder="清淡 / 下饭" /></div><div><label class="field-label">做法</label><input id="dishMethodInput" class="input" placeholder="炒 / 蒸 / 煎" /></div></div>
         <div class="two-col"><div><label class="field-label">难度</label><input id="dishDifficultyInput" class="input" placeholder="简单 / 中等" /></div><div><label class="field-label">热量 kcal</label><input id="dishCaloriesInput" class="input" type="number" placeholder="约 300" /></div></div>
         <div class="two-col"><div><label class="field-label">重量(克)</label><input id="dishWeightInput" class="input" type="number" placeholder="约 250" /></div><div><label class="field-label">&nbsp;</label><button type="button" class="secondary-btn" id="estimateCalBtn" style="width:100%">估算热量</button></div></div>
-        <p class="muted" id="estimateHint" style="font-size:12px;margin-top:6px">填入重量后点"估算热量"，会按菜名或分类自动估算并填入上面的热量框，结果可手动修改。重量留空则按一份约 250 克估算。</p>
+        <p class="muted" id="estimateHint" style="font-size:12px;margin-top:6px">填入重量后会自动估算热量并填入上面的热量框，结果可手动修改。重量留空点"估算热量"则按一份约 250 克估算。</p>
         <label class="field-label">食材</label><input id="dishIngredientsInput" class="input" placeholder="番茄、鸡蛋、葱" />
         <label class="field-label">标签</label><input id="dishTagsInput" class="input" placeholder="快手、减脂、下饭" />
         <label class="field-label">图片</label><input id="dishImageInput" class="file-input" type="file" accept="image/*" /><img id="imagePreview" class="image-preview hidden" alt="预览" />
@@ -150,6 +150,6 @@
     <input id="quickImageInput" class="hidden" type="file" accept="image/*" />
     <div class="toast hidden" id="toast"></div>
   </div>
-  <script src="./app-v5.js?v=5.14"></script>
+  <script src="./app-v5.js?v=5.15"></script>
 </body>
 </html>
